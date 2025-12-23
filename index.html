@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html data-theme="light">
+  <head>
+    <title>Word soup</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.pink.min.css">
+    <style>
+      :root {
+        /* Board fits within viewport width/height; adjust percentages to taste */
+        --board-size: min(90vw, 70vh);
+        --gap: 0.35rem;
+      }
+      .grid-container{
+         display: flex;
+         flex-direction: column;
+         justify-content: space-around;
+         align-items: center;
+      }
+      .word-grid {
+        width: var(--board-size);
+        height: var(--board-size);
+        display: grid;
+        grid-template-columns: repeat(var(--cols, 10), 1fr); /* --cols comes from Alpine */
+        gap: var(--gap);
+        border: medium solid;
+        border-radius: 0.5rem;
+        padding: var(--gap);
+      }
+      .letter-box{
+        display: grid;
+        place-items: center;
+        aspect-ratio: 1;                 /* keeps squares */
+        border: thin solid;
+        border-radius: var(--cell-radius);
+      }
+    
+      .letter-box h2{
+        margin: 0;
+        line-height: 1;
+        font-weight: 700;
+        font-size: clamp(0.2rem, calc(var(--board-size) / var(--cols) * 0.3), 2.5rem);
+      }
+      .word-list{
+        width: 100%;
+      }
+      @media print {
+       .controls {
+          visibility: hidden;
+          display: none;
+       }
+      }
+      .export-button{
+        cursor: pointer;
+      }
+    </style>
+    
+  </head>
+  <body>
+    <div class="container controls" x-data x-cloak>
+      <article>
+      
+        <header>Settings</header>
+      
+        <fieldset>
+          <label>
+            <span>Grid size: <span x-text="$store.options.cols"></span></span>
+            <input type="range" min="4" max="30"
+            x-model="$store.options.cols"/>
+          </label>
+          
+          <label>
+            Max # words:
+            <input type="number" min="1" x-model="$store.options.maxWords">
+          </label>
+          
+          <details>
+            <summary>Allowed directions</summary>
+            <label>
+              <input type="checkbox" x-model="$store.options.N"/>
+              N
+            </label>
+            <label>
+              <input type="checkbox" x-model="$store.options.S"/>
+              S
+            </label>
+            <label>
+              <input type="checkbox" x-model="$store.options.E"/>
+              E
+            </label>
+            <label>
+              <input type="checkbox" x-model="$store.options.W"/>
+              W
+            </label>
+            <label>
+              <input type="checkbox" x-model="$store.options.NE"/>
+              NE
+            </label>
+            <label>
+              <input type="checkbox" x-model="$store.options.NW"/>
+              NW
+            </label>
+            <label>
+              <input type="checkbox" x-model="$store.options.SE"/>
+              SE
+            </label>
+            <label>
+              <input type="checkbox" x-model="$store.options.SW"/>
+              SW
+            </label>
+          </details>
+          
+          <label>
+            <span>Backwards probability: <span x-text="$store.options.backwardsProbability"></span>%</span>
+            <input type="range" min="0" max="100"
+            x-model="$store.options.backwardsProbability"/>
+          </label>
+          
+          <label>
+            Alphabet:
+            <input type="text" x-model="$store.options.alphabet">
+          </label>
+          
+          <details>
+            <summary>Dictionary</summary>
+            <textarea x-model="$store.dictionary">
+            </textarea>
+          </details>
+                    
+          <button x-on:click="$store.genGrid()">Regenerate</button>
+        </fieldset>
+        
+        <footer>
+          <div x-on:click="$store.export_settings()" class="export-button"><kbd>Export settings</kbd></div>
+        </footer>
+        
+      </article>
+    </div>
+    
+    <div class="container grid-container" x-data 
+    :style="{'--cols': $store.options.cols}">
+      <div class="word-grid">
+        <template x-for="row in $store.grid">
+            <template x-for="v in row">
+              <div class="letter-box">
+                <h2 x-text="v"></h2>
+              </div>
+            </template>
+        </template>
+      </div>
+      
+      <div class="word-list">
+        <template x-for="word in $store.words">
+          <div x-html="word"></div>
+        </template>
+      </div>
+      
+    </div>
+    
+    <script type="module">
+      import WordSearch from './index.js';
+      import Alpine from 'https://cdn.jsdelivr.net/npm/alpinejs@3.15.3/+esm'
+      
+      Alpine.store('grid', []); 
+      Alpine.store('words', []);
+      
+      function genGrid(){
+        let alop = Alpine.store('options');
+        alop.dictionary = Alpine.store('dictionary').split(/\r?\n/).map(s => s.trim()).filter(s => s.length);
+        
+        let str = JSON.stringify(alop);
+        localStorage.setItem("options", str);
+        
+        let options = JSON.parse(str);
+        
+        options.disabledDirections = []
+        if (!options.N) options.disabledDirections.push('N');
+        if (!options.S) options.disabledDirections.push('S');
+        if (!options.E) options.disabledDirections.push('E');
+        if (!options.W) options.disabledDirections.push('W');
+        if (!options.NE) options.disabledDirections.push('NE');
+        if (!options.NW) options.disabledDirections.push('NW');
+        if (!options.SE) options.disabledDirections.push('SE');
+        if (!options.SW) options.disabledDirections.push('SW');
+        
+        options.rows = options.cols;
+        options.backwardsProbability = options.backwardsProbability / 100;
+        
+        const ws = new WordSearch(options);
+        Alpine.store('grid', ws.grid);
+        let words = [];
+        ws.words.forEach((dict) => {
+          words.push(dict.word);
+        });
+        Alpine.store('words', words);
+      }
+      Alpine.store('genGrid', genGrid);
+      
+      let options;
+      if (localStorage.getItem("options") !== null && localStorage.getItem("options") !== undefined){
+        options = JSON.parse(localStorage.getItem("options"));
+      }else{
+        options = {
+          cols: 6,
+          rows: 6,
+          maxWords: 20,
+          backwardsProbability: 0.0,
+          upperCase: true,
+          alphabet: "абвгґдеєжзиіїйклмнопрстуфхцчшщьюя",
+          dictionary: ["перед", "позначає", "одному", "після", "сучасному"],
+          N:true,
+          S:true,
+          E:true,
+          W:true,
+          NE:true,
+          NW:true,
+          SE:true,
+          SW:true
+        };
+      }
+      Alpine.store('dictionary', options.dictionary.join("\n"));
+      
+      options.init = () => {
+        Alpine.effect(() => {
+          genGrid();
+        })
+      }
+      Alpine.store('options', options);
+      
+      
+      function saveJsonUnicode(data, filename = "data.json") {
+        // Pretty-print JSON with 2-space indent
+        const jsonText = JSON.stringify(data, null, 2);
+        // UTF-8 BOM to help some editors/apps correctly detect UTF-8
+        const BOM = new Uint8Array([0xEF, 0xBB, 0xBF]);
+        // Create a Blob with BOM + JSON text, explicitly as UTF-8
+        const blob = new Blob([BOM, jsonText], { type: "application/json;charset=utf-8" });
+        // Modern browsers: create an object URL and click a hidden anchor
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+      
+      function export_settings(){
+        saveJsonUnicode(Alpine.store('options'), "word-soup-data.json");
+      }
+      Alpine.store('export_settings', export_settings);
+      
+      Alpine.start();
+    </script>
+  </body>
+</html>
