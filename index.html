@@ -51,6 +51,12 @@
       .export-button{
         cursor: pointer;
       }
+      .footer{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+      }
     </style>
     
   </head>
@@ -58,8 +64,10 @@
     <div class="container controls" x-data x-cloak>
       <article>
       
-        <header>Settings</header>
-      
+        <header>Word Soup</header>
+        
+        <details>
+        <summary>Settings</summary>
         <fieldset>
           <label>
             <span>Grid size: <span x-text="$store.options.cols"></span></span>
@@ -124,12 +132,14 @@
             <textarea x-model="$store.dictionary">
             </textarea>
           </details>
-                    
-          <button x-on:click="$store.genGrid()">Regenerate</button>
-        </fieldset>
+          </fieldset>
+                  
+        </details>
+        <button x-on:click="$store.genGrid()">Regenerate</button>
         
-        <footer>
+        <footer class="footer">
           <div x-on:click="$store.export_settings()" class="export-button"><kbd>Export settings</kbd></div>
+          <button x-on:click="print()" class="outline secondary">Print</button>
         </footer>
         
       </article>
