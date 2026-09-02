@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<DOCTYPE html>
 <html data-theme="light">
   <head>
     <title>Word soup</title>
@@ -171,12 +171,12 @@
       </div>
       
       <div class="word-list">
-        <template x-if="$store.hints.length > 0">
-          <template x-for="hint in $store.hints">
+        <template x-if="$store.hintsList.length > 0">
+          <template x-for="hint in $store.hintsList">
             <div x-html="hint"></div>
           </template>
         </template>
-        <template x-if="$store.hints.length == 0">
+        <template x-if="$store.hintsList.length == 0">
           <template x-for="word in $store.words">
             <div x-html="word"></div>
           </template>
@@ -191,11 +191,21 @@
       
       Alpine.store('grid', []); 
       Alpine.store('words', []);
-      Alpine.store('hints', []);
+      Alpine.store('hintsList', []);
       
       function genGrid(){
         let alop = Alpine.store('options');
         alop.dictionary = Alpine.store('dictionary').split(/\r?\n/).map(s => s.trim()).filter(s => s.length);
+        
+        let title = Alpine.store('title');
+        localStorage.setItem("title", title);
+        document.title = title;
+        
+        let hints = Alpine.store('hints');
+        localStorage.setItem("hints", hints);
+        
+        let hintsList = hints.split(/\r?\n/).map(s => s.trim()).filter(s => s.length);
+        Alpine.store('hintsList', hintsList);
         
         let str = JSON.stringify(alop);
         localStorage.setItem("options", str);
@@ -208,7 +218,7 @@
         if (!options.E) options.disabledDirections.push('E');
         if (!options.W) options.disabledDirections.push('W');
         if (!options.NE) options.disabledDirections.push('NE');
-        if (!options.NW) options.disabledDirections.push('NW');
+        if (!options.NW) options.disabled.push('NW');
         if (!options.SE) options.disabledDirections.push('SE');
         if (!options.SW) options.disabledDirections.push('SW');
         
@@ -224,6 +234,10 @@
         Alpine.store('words', words);
       }
       Alpine.store('genGrid', genGrid);
+      
+      let title = localStorage.getItem("title") ?? "Word soup";
+      Alpine.store('title', title);
+      document.title = title;
       
       let options;
       if (localStorage.getItem("options") !== null && localStorage.getItem("options") !== undefined){
@@ -248,6 +262,7 @@
         };
       }
       Alpine.store('dictionary', options.dictionary.join("\n"));
+      Alpine.store('hints', localStorage.getItem("hints") ?? "");
       
       options.init = () => {
         Alpine.effect(() => {
