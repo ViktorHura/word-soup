@@ -157,7 +157,7 @@
       </article>
     </div>
 
-    <h1 x-text="$store.title"></h1>
+    <h1 x-html="$store.title"></h1>
     <div class="container grid-container" x-data 
     :style="{'--cols': $store.options.cols}">
       <div class="word-grid">
@@ -192,6 +192,7 @@
       Alpine.store('grid', []); 
       Alpine.store('words', []);
       Alpine.store('hintsList', []);
+      Alpine.store('title', "")
       
       function genGrid(){
         let alop = Alpine.store('options');
