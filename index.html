@@ -70,6 +70,11 @@
         <summary>Settings</summary>
         <fieldset>
           <label>
+            Title:
+            <input type="text" x-model="$store.title">
+          </label>
+          
+          <label>
             <span>Grid size: <span x-text="$store.options.cols"></span></span>
             <input type="range" min="4" max="30"
             x-model="$store.options.cols"/>
@@ -132,6 +137,13 @@
             <textarea x-model="$store.dictionary">
             </textarea>
           </details>
+
+          <details>
+            <summary>Hints</summary>
+            <textarea x-model="$store.hints">
+            </textarea>
+          </details>
+          
           </fieldset>
                   
         </details>
@@ -144,7 +156,8 @@
         
       </article>
     </div>
-    
+
+    <h1 x-text="$store.title"></h1>
     <div class="container grid-container" x-data 
     :style="{'--cols': $store.options.cols}">
       <div class="word-grid">
@@ -158,8 +171,15 @@
       </div>
       
       <div class="word-list">
-        <template x-for="word in $store.words">
-          <div x-html="word"></div>
+        <template x-if="$store.hints.length > 0">
+          <template x-for="hint in $store.hints">
+            <div x-html="hint"></div>
+          </template>
+        </template>
+        <template x-if="$store.hints.length == 0">
+          <template x-for="word in $store.words">
+            <div x-html="word"></div>
+          </template>
         </template>
       </div>
       
@@ -171,6 +191,7 @@
       
       Alpine.store('grid', []); 
       Alpine.store('words', []);
+      Alpine.store('hints', []);
       
       function genGrid(){
         let alop = Alpine.store('options');
