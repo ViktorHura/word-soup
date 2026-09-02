@@ -163,7 +163,7 @@
       <div class="word-grid">
         <template x-for="row in $store.grid">
             <template x-for="v in row">
-              <div class="letter-box">
+              <div class="letter-box" x-data="{highlit: False}" :style="{'background-color': highlit ? 'red': 'white' }" x-text="v" x-on:click="highlit = !highlit">
                 <h2 x-text="v"></h2>
               </div>
             </template>
