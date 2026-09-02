@@ -60,7 +60,7 @@
     </style>
     
   </head>
-  <body>
+  <body x-data="titl">
     <div class="container controls" x-data x-cloak>
       <article>
       
@@ -71,7 +71,7 @@
         <fieldset>
           <label>
             Title:
-            <input type="text" x-model="$store.title">
+            <input type="text" x-model="titl">
           </label>
           
           <label>
@@ -157,7 +157,7 @@
       </article>
     </div>
 
-    <h1 x-html="$store.title"></h1>
+    <h1 x-html="titl"></h1>
     <div class="container grid-container" x-data 
     :style="{'--cols': $store.options.cols}">
       <div class="word-grid">
